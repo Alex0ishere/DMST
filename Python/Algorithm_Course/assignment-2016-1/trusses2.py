@@ -38,7 +38,7 @@ def trusses(p_graph, p_number_of_trusses,p_mode='Max'):
   
 	#debugging
   d = {}
-  for key, item in neighbours(l_reduced_graph).items():
+  for key, item in adjacency_list(l_reduced_graph).items():
 	  d[int(key)] = item
   od = collections.OrderedDict(sorted(d.items()))
   for key,item in od.items():
@@ -48,7 +48,7 @@ def trusses(p_graph, p_number_of_trusses,p_mode='Max'):
 	
 	
   l_reduced_vertices = graph_vertices(l_reduced_graph)
-  l_adj_list = neighbours(l_reduced_graph)
+  l_adj_list = adjacency_list(l_reduced_graph)
   l_reduced_neighbours = neighbours(l_reduced_graph)
   l_trusses = []
   l_possible_trusses = []
@@ -67,71 +67,22 @@ def trusses(p_graph, p_number_of_trusses,p_mode='Max'):
      #print(vertex,':',l_possible_trusses[-1],'without',excluded)
   elif p_mode == 'All':
     l_possible_trusses = sum([ list(combinations(l_reduced_vertices,i)) for i in range(len(l_reduced_vertices)+1) ],[])
-		l_trusses = [truss for truss in l_possible_trusses if check_truss(l_reduced_neighbours, truss, l_bound) ]		
   else:
     print(p_mode,'is incorrect. Please try "Max" or "All". Program exits.')
     sys.exits()
+  temp = order(copy.deepcopy(l_possible_trusses))
 
-  l_possible_trusses = [ (tuple(item) + tuple([key])) for key, item in l_reduced_neighbours.items() ]	
-
-  l_test_trusses = {}
-  l_test_possible_trusses = {}
-  for test in l_possible_trusses:
-    l_test_possible_trusses[test] = sum([ list(combinations(test,i)) for i in range(len(test)+1) ],[])
-    l_test_trusses[test] = [truss for truss in l_test_possible_trusses[test]  if check_truss(l_reduced_neighbours, truss, l_bound) ]
-    max = 2
-    for i in l_test_trusses[test]:
-      if len(i) > max:
-        max = len(i)
-    for i in copy.deepcopy(l_test_trusses[test]):
-      if len(i) < max:
-        l_test_trusses[test].remove(i)		
-  #[print(t,':',i) for t,i in l_test_trusses.items()]
-	#for test
-  l_test = set()
-  for i in l_test_trusses.values():
-    l_test.update(i)
-  #print('\n',order(l_test) )
-	
-  	
-  #l_trusses = [tuple(truss) for truss in l_reduced_neighbours.values() if check_truss(l_reduced_neighbours, tuple(truss), l_bound) ]			
-  #l_trusses = [truss for l_truss in l_possible_trusses for truss in return_truss(l_reduced_neighbours,l_truss,l_bound) ]
-  #l_trusses = [truss for truss in l_trusses if check_truss(l_reduced_neighbours, truss, l_bound) ]
- 
-  return order(l_test)
-
-# check if the input truss is a truss for the given bound and neighbours		
-def return_truss(p_neighbours, p_truss, p_bound,p_level=1, p_mode='Maximal'):
-  if len(p_truss) <= 1:
-    return set(())
-  l_trusses = set()
-  valid = True
-  for vertex1 in p_truss:   
-    if len(set.intersection(p_neighbours[str(vertex1)], set(p_truss))) < p_bound:	
-      valid = False
-      l_truss = return_truss(p_neighbours, tuple_without(p_truss,vertex1),(p_level+1), p_bound)
-      l_trusses.update(l_truss)
-
-    #if valid:
-    #  l_truss = tuple_without(p_truss,vertex1)
-    #  for vertex2 in tuple_without(p_truss,vertex1):
-    #    if len(set.intersection(p_neighbours[str(vertex1)], p_neighbours[str(vertex2)], set(p_truss))) < p_bound:
-    #      valid = False
-    #      l_trusses.update(return_truss(p_neighbours, l_truss, p_bound))
-    #      l_trusses.update(return_truss(p_neighbours, tuple_without(p_truss, vertex2), p_bound))
-  if p_level ==1:
-    print ('DEBUG',p_truss,':',valid,l_trusses)	
-  if valid:
-    return set(tuple([p_truss])) 
-  else:
-    
-    return l_trusses
-  # if p_mode == 'Maximal':
-   #   return l_trusses
-  # else:
-   #   return l_trusses	
-  		
-	
+  for truss in order(temp):
+    try:
+      if str(truss[0]) == '0' and (str(truss[1]) == '3' or str(truss[1]) == '1') and (str(truss[2]) == '3' or str(truss[2]) == '5'):
+       # print ('Truss:',truss)
+       pass
+    except:
+      continue
+  l_trusses = [truss for truss in l_possible_trusses if check_truss(l_reduced_neighbours, truss, l_bound) ]			
+							
+  return order(l_trusses)
+	  
 # check if the input truss is a truss for the given bound and neighbours		
 def check_truss(p_neighbours, p_truss, p_bound):
   if len(p_truss) <= 1:
@@ -154,13 +105,26 @@ def order(p_trusses):
       temp.append(int(i))
     result.add(tuple(sorted(temp)))
   return sorted(list(result))
+  
+# Returns the adjacency list for each vertex of the given graph	
+def adjacency_list(p_graph):
+  l_adj_list = {}
+  for vertex in graph_vertices(p_graph):
+    l_adj_list[vertex] = []
+    for edge in p_graph:
+      if edge[0] == vertex:
+        l_adj_list[vertex].append(edge[1])
+      elif edge[1] == vertex:	
+        l_adj_list[vertex].append(edge[0])
+  return l_adj_list
 	
 # return a new tuple with an element removed
 def tuple_without(original_tuple, element_to_remove):
-    new_tuple = list(original_tuple)
-    new_tuple.remove(element_to_remove)
+    new_tuple = []
+    for s in list(original_tuple):
+        if not s == element_to_remove:
+            new_tuple.append(s)
     return tuple(new_tuple)
-		
 		
 #main execution starts
 #check that the parameters are valid
@@ -185,22 +149,12 @@ else:
   # Messsage is commented to mantain the required output format
 	#print ('The program begins to find the ' + str(input_number_of_trusses) + '-trusses in', input_file_name )
   pass	
-
+	
 # Main Execution starts 	
-g_trusses = []
 try:
   g_trusses = trusses(read_graph(input_file_name),input_number_of_trusses,sys.argv[3])
-except IndexError:
-  try:
-    g_trusses = trusses(read_graph(input_file_name),input_number_of_trusses)
-  except MemoryError:
-    print ('Memory is limited.\n')
-    #raise
-except MemoryError:
-  print ('Memory is limited.\n')
-  #raise
-except:	
-  print ("Unexpected error:",sys.exc_info())
+except:
+  g_trusses = trusses(read_graph(input_file_name),input_number_of_trusses)
 	
 for truss in g_trusses:
   print (truss)
